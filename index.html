@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Uma cidade inteira no Sambódromo</title>
+    <link rel="stylesheet" href="./styles.css?v=20260213u" />
+  </head>
+  <body>
+    <div id="loading-screen" class="loading-screen" role="status" aria-live="polite">
+      <div class="loading-card">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p id="loading-text" class="loading-text">Carregando dados do mapa...</p>
+      </div>
+    </div>
+
+    <div class="app" id="app" hidden>
+      <div class="topbar"></div>
+      <div class="header">
+        <div class="header-main">
+          <h1>Uma cidade inteira no Sambódromo</h1>
+          <p class="linha-fina">
+            Compare o tamanho da população de sua cidade com o número de componentes de um desfile no Rio.
+          </p>
+        </div>
+        <div class="header-logo-wrap" aria-label="Logo g1">
+          <svg class="g1-logo-svg" viewBox="0 0 40 42" aria-hidden="true" focusable="false">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M30.167 4.866L38.12.134C38.99-.295 40 .345 40 1.512V30.31c0 .54-.585 1.133-1.307 1.133h-3.655a1.315 1.315 0 01-1.306-1.323V9.352l-2.444 1.458c-.868.426-1.855-.237-1.855-1.213V6.055c0-.507.285-.968.734-1.19zM14.11 25.831c-3.246 0-5.977-2.607-5.977-6.415 0-3.86 2.73-6.416 5.977-6.416 3.246 0 5.925 2.555 5.925 6.416 0 3.808-2.68 6.415-5.925 6.415zm7.368-18.463c-.773 0-1.236.469-1.236 1.251v1.356c-1.392-1.722-3.968-3.026-6.545-3.026C7.411 6.95 2 12.374 2 19.467c0 7.094 5.1 11.997 11.542 11.997a8.67 8.67 0 006.389-2.764c-.05 4.954-2.627 7.198-7.059 7.198-2.37 0-4.586-.731-7.161-2.4-.67-.469-1.443-.313-1.804.418L2.36 36.993c-.36.73-.257 1.408.464 1.877C6.02 40.956 9.782 42 13.028 42c8.502 0 13.19-4.643 13.19-15.335V8.62c0-.782-.463-1.251-1.236-1.251h-3.504z" />
+          </svg>
+        </div>
+      </div>
+
+      <div class="map-wrap">
+        <svg id="mapa" viewBox="0 0 1200 1200" aria-label="Mapa de municípios do Brasil">
+          <g id="municipios"></g>
+        </svg>
+      </div>
+
+      <div class="search-wrap" id="search-wrap">
+        <label class="search-label" for="municipio-search">Pesquise seu município!</label>
+        <div class="search-row">
+          <input
+            id="municipio-search"
+            type="text"
+            autocomplete="off"
+            placeholder="Pesquise seu município!"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-controls="search-suggestions"
+          />
+          <button id="search-btn" type="button">Pesquisar</button>
+        </div>
+        <ul
+          id="search-suggestions"
+          role="listbox"
+          aria-label="Sugestões de municípios"
+        ></ul>
+        <p id="search-msg" class="search-msg" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <section id="detail-screen" class="detail-screen" aria-live="polite" hidden>
+      <article class="detail-card">
+        <div class="detail-topbar">
+          <div class="detail-g1-logo" aria-label="Logo g1">
+            <svg class="g1-logo-svg" viewBox="0 0 40 42" aria-hidden="true" focusable="false">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M30.167 4.866L38.12.134C38.99-.295 40 .345 40 1.512V30.31c0 .54-.585 1.133-1.307 1.133h-3.655a1.315 1.315 0 01-1.306-1.323V9.352l-2.444 1.458c-.868.426-1.855-.237-1.855-1.213V6.055c0-.507.285-.968.734-1.19zM14.11 25.831c-3.246 0-5.977-2.607-5.977-6.415 0-3.86 2.73-6.416 5.977-6.416 3.246 0 5.925 2.555 5.925 6.416 0 3.808-2.68 6.415-5.925 6.415zm7.368-18.463c-.773 0-1.236.469-1.236 1.251v1.356c-1.392-1.722-3.968-3.026-6.545-3.026C7.411 6.95 2 12.374 2 19.467c0 7.094 5.1 11.997 11.542 11.997a8.67 8.67 0 006.389-2.764c-.05 4.954-2.627 7.198-7.059 7.198-2.37 0-4.586-.731-7.161-2.4-.67-.469-1.443-.313-1.804.418L2.36 36.993c-.36.73-.257 1.408.464 1.877C6.02 40.956 9.782 42 13.028 42c8.502 0 13.19-4.643 13.19-15.335V8.62c0-.782-.463-1.251-1.236-1.251h-3.504z" />
+            </svg>
+          </div>
+          <button
+            id="detail-close-btn"
+            class="detail-close-btn"
+            type="button"
+            aria-label="Voltar para o mapa"
+            data-hide-on-share="true"
+          >
+            Voltar
+          </button>
+        </div>
+
+        <div class="detail-block">
+          <p class="detail-kicker">A sua cidade:</p>
+          <h2 id="detail-title" class="detail-title"></h2>
+        </div>
+
+        <div class="detail-block detail-block-map">
+          <p class="detail-kicker">Zoom na cidade no mapa</p>
+          <div id="detail-map-preview" class="detail-map-preview"></div>
+        </div>
+
+        <div class="detail-block">
+          <p class="detail-kicker">População:</p>
+          <p id="detail-population" class="detail-population"></p>
+        </div>
+
+        <div id="detail-group-text" class="detail-group-text"></div>
+
+        <div class="detail-actions" data-hide-on-share="true">
+          <button id="detail-share-btn" class="detail-share-btn" type="button">
+            Baixar imagem
+          </button>
+        </div>
+      </article>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script type="module" src="./js/main.js?v=20260213s"></script>
+  </body>
+</html>
