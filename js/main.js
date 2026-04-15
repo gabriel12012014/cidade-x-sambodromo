@@ -1,6 +1,6 @@
 import { loadMunicipiosData } from "./data.js?v=20260213s";
 import { createDetailController } from "./detail.js?v=20260213s";
-import { createMapController } from "./map.js?v=20260213s";
+
 import { createSearchController } from "./search.js?v=20260213s";
 
 const appEl = document.getElementById("app");
@@ -9,15 +9,14 @@ const detailCardEl = document.querySelector(".detail-card");
 const loadingScreenEl = document.getElementById("loading-screen");
 const loadingTextEl = document.getElementById("loading-text");
 
-const mapEl = document.getElementById("mapa");
-const municipiosGroupEl = document.getElementById("municipios");
+
 const searchWrapEl = document.getElementById("search-wrap");
 const searchInputEl = document.getElementById("municipio-search");
 const searchBtnEl = document.getElementById("search-btn");
 const searchSuggestionsEl = document.getElementById("search-suggestions");
 const searchMsgEl = document.getElementById("search-msg");
 const detailTitleEl = document.getElementById("detail-title");
-const detailMapPreviewEl = document.getElementById("detail-map-preview");
+
 const detailPopulationEl = document.getElementById("detail-population");
 const detailGroupTextEl = document.getElementById("detail-group-text");
 const detailShareBtnEl = document.getElementById("detail-share-btn");
@@ -46,7 +45,7 @@ function showLoading() {
 
 async function init() {
   showLoading();
-  setLoadingState("Carregando dados do mapa...");
+  setLoadingState("Carregando dados...");
 
   const searchController = createSearchController({
     searchWrap: searchWrapEl,
@@ -56,15 +55,11 @@ async function init() {
     searchMsg: searchMsgEl,
   });
 
-  const mapController = createMapController({
-    mapEl,
-    groupEl: municipiosGroupEl,
-  });
+
 
   let detailController = null;
   const closeDetail = () => {
     if (detailController) detailController.hide();
-    mapController.closeSelection();
     searchController.clearSelectedMunicipio();
     appEl.hidden = false;
     requestAnimationFrame(() => {
@@ -76,7 +71,7 @@ async function init() {
     detailScreenEl,
     detailCardEl,
     detailTitleEl,
-    detailMapPreviewEl,
+
     detailPopulationEl,
     detailGroupTextEl,
     detailShareBtnEl,
@@ -85,17 +80,19 @@ async function init() {
     setSearchMessage: searchController.setSearchMessage,
   });
 
-  searchController.setOpenHandler((code) => mapController.openMunicipioByCode(code));
-  searchController.setClearSelectionHandler(() => mapController.closeSelection());
+  searchController.setOpenHandler((code) => {
+    const data = csvByCode.get(code);
+    if (!data) return;
 
-  mapController.setOnMunicipioSelected(({ code, data }) => {
     const label = `${data["Município"] || ""} (${data["UF"] || ""})`.trim();
     searchController.markSelected(code, label);
 
-    const mapSnapshot = mapController.createSnapshot();
-    detailController.show({ data, mapSnapshot });
+    detailController.show({ data });
     appEl.hidden = true;
   });
+  searchController.setClearSelectionHandler(() => { });
+
+
 
   document.addEventListener("click", (event) => {
     if (searchController.contains(event.target)) return;
@@ -109,25 +106,23 @@ async function init() {
       return;
     }
     searchController.clearSuggestions();
-    mapController.closeSelection();
+    searchController.clearSuggestions();
   });
 
-  window.addEventListener("resize", () => {
-    if (detailController.isOpen()) return;
-    mapController.closeSelection();
-  });
 
+
+  let csvByCode;
   try {
-    const { features, csvByCode, searchIndex } = await loadMunicipiosData();
+    const data = await loadMunicipiosData();
+    csvByCode = data.csvByCode;
+    const { searchIndex } = data;
 
-    mapController.setMunicipioData(csvByCode);
-    mapController.render(features);
     searchController.setSearchIndex(searchIndex);
 
     showApp();
   } catch (error) {
     console.error(error);
-    setLoadingState("Falha ao carregar dados do mapa. Recarregue a página.", true);
+    setLoadingState("Falha ao carregar dados. Recarregue a página.", true);
   }
 }
 

@@ -4,7 +4,7 @@ export function createDetailController({
   detailScreenEl,
   detailCardEl,
   detailTitleEl,
-  detailMapPreviewEl,
+
   detailPopulationEl,
   detailGroupTextEl,
   detailShareBtnEl,
@@ -15,75 +15,12 @@ export function createDetailController({
   let currentData = null;
   let shareObjectUrl = "";
   let renderVersion = 0;
-  const closeHandler = typeof onClose === "function" ? onClose : () => {};
-  const setMessage = typeof setSearchMessage === "function" ? setSearchMessage : () => {};
+  const closeHandler = typeof onClose === "function" ? onClose : () => { };
+  const setMessage = typeof setSearchMessage === "function" ? setSearchMessage : () => { };
 
-  function loadImage(src) {
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      image.decoding = "async";
-      image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error("Falha ao carregar imagem do mapa"));
-      image.src = src;
-    });
-  }
 
-  async function rasterizeMapPreview() {
-    const svgEl = detailMapPreviewEl.querySelector("svg");
-    if (!svgEl) return "";
 
-    const rect = detailMapPreviewEl.getBoundingClientRect();
-    const width = Math.max(1, Math.round(rect.width));
-    const height = Math.max(1, Math.round(rect.height));
 
-    const svgClone = svgEl.cloneNode(true);
-    svgClone.setAttribute("width", String(width));
-    svgClone.setAttribute("height", String(height));
-    svgClone.style.display = "block";
-    svgClone.style.width = "100%";
-    svgClone.style.height = "100%";
-
-    // Inline computed styles so the SVG keeps the same look without external CSS.
-    const sourcePaths = svgEl.querySelectorAll("path");
-    const clonePaths = svgClone.querySelectorAll("path");
-    for (let i = 0; i < clonePaths.length; i += 1) {
-      const sourcePath = sourcePaths[i];
-      const clonePath = clonePaths[i];
-      if (!sourcePath || !clonePath) continue;
-
-      const computed = window.getComputedStyle(sourcePath);
-      clonePath.setAttribute("fill", computed.fill);
-      clonePath.setAttribute("stroke", computed.stroke);
-      clonePath.setAttribute("stroke-width", computed.strokeWidth);
-      clonePath.setAttribute("stroke-linejoin", computed.strokeLinejoin);
-      clonePath.setAttribute("stroke-linecap", computed.strokeLinecap);
-      clonePath.setAttribute("fill-opacity", computed.fillOpacity);
-      clonePath.setAttribute("stroke-opacity", computed.strokeOpacity);
-    }
-
-    const serialized = new XMLSerializer().serializeToString(svgClone);
-    const svgBlob = new Blob([serialized], { type: "image/svg+xml;charset=utf-8" });
-    const svgUrl = URL.createObjectURL(svgBlob);
-
-    try {
-      const image = await loadImage(svgUrl);
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return "";
-
-      ctx.fillStyle = "#fefefb";
-      ctx.fillRect(0, 0, width, height);
-      ctx.drawImage(image, 0, 0, width, height);
-      return canvas.toDataURL("image/png");
-    } catch (error) {
-      console.error(error);
-      return "";
-    } finally {
-      URL.revokeObjectURL(svgUrl);
-    }
-  }
 
   function safeName(municipio, uf) {
     return `${municipio}-${uf}`
@@ -105,7 +42,7 @@ export function createDetailController({
     return !detailScreenEl.hidden;
   }
 
-  function show({ data, mapSnapshot }) {
+  function show({ data }) {
     renderVersion += 1;
     currentData = data;
     clearShareCache();
@@ -120,8 +57,7 @@ export function createDetailController({
     detailCloseBtnEl.textContent = "Voltar";
     detailShareBtnEl.textContent = "Baixar imagem";
 
-    detailMapPreviewEl.innerHTML = "";
-    if (mapSnapshot) detailMapPreviewEl.appendChild(mapSnapshot);
+
 
     detailScreenEl.hidden = false;
   }
@@ -137,10 +73,6 @@ export function createDetailController({
     if (versionSnapshot !== renderVersion || detailScreenEl.hidden) return "";
 
     const cardWidth = Math.max(1, Math.round(detailCardEl.getBoundingClientRect().width));
-    const mapPreviewHeight = Math.max(1, Math.round(detailMapPreviewEl.getBoundingClientRect().height));
-
-    const mapDataUrl = await rasterizeMapPreview();
-    if (versionSnapshot !== renderVersion || detailScreenEl.hidden) return "";
 
     const exportHost = document.createElement("div");
     exportHost.style.position = "fixed";
@@ -159,32 +91,7 @@ export function createDetailController({
     exportCard.style.transition = "none";
     exportCard.querySelectorAll('[data-hide-on-share="true"]').forEach((el) => el.remove());
 
-    const exportMapBlock = exportCard.querySelector(".detail-block-map");
-    if (exportMapBlock) {
-      exportMapBlock.style.flex = "0 0 auto";
-      exportMapBlock.style.minHeight = "0";
-    }
 
-    const exportPreview = exportCard.querySelector("#detail-map-preview");
-    if (exportPreview) {
-      exportPreview.style.flex = "0 0 auto";
-      exportPreview.style.height = `${mapPreviewHeight}px`;
-      exportPreview.style.minHeight = `${mapPreviewHeight}px`;
-      exportPreview.style.maxHeight = `${mapPreviewHeight}px`;
-    }
-
-    const exportMap = exportCard.querySelector("#detail-map");
-    if (exportMap && mapDataUrl) {
-      const exportMapImage = document.createElement("img");
-      exportMapImage.id = "detail-map";
-      exportMapImage.alt = "";
-      exportMapImage.src = mapDataUrl;
-      exportMapImage.style.display = "block";
-      exportMapImage.style.width = "100%";
-      exportMapImage.style.height = "100%";
-      exportMapImage.style.borderRadius = "14px";
-      exportMap.replaceWith(exportMapImage);
-    }
 
     exportHost.appendChild(exportCard);
     document.body.appendChild(exportHost);
